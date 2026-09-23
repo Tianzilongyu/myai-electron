@@ -169,6 +169,39 @@
             </div>
           </div>
 
+          <div class="settings-section collapsible" id="sec-mcp">
+            <button class="settings-section-head" type="button" data-sec="sec-mcp">
+              <span class="settings-section-title">🔌 MCP 服务器（工具连接器）</span>
+              <span class="sec-chevron">▾</span>
+            </button>
+            <div class="settings-section-body">
+              <div class="settings-hint">接入外部 MCP 服务器，AI 就能调用它提供的工具（数据库、浏览器、本地脚本等）。<b>只添加你信任的服务器</b>，其工具随「AI 能力」总开关一起生效。</div>
+              <div class="mcp-toolbar">
+                <button class="key-btn primary" id="mcp-add-btn" type="button">添加服务器</button>
+                <button class="key-btn" id="mcp-reload-btn" type="button">重新连接</button>
+              </div>
+              <div class="mcp-list" id="mcp-list"></div>
+              <div class="mcp-form hidden" id="mcp-form">
+                <input type="text" id="mcp-name" class="settings-input" placeholder="名称（如：我的数据库）" autocomplete="off" spellcheck="false">
+                <select id="mcp-transport" class="settings-input">
+                  <option value="stdio">stdio（本地命令）</option>
+                  <option value="http">HTTP（远程端点）</option>
+                </select>
+                <div class="mcp-field-col" id="mcp-command-row">
+                  <input type="text" id="mcp-command" class="settings-input" placeholder="启动命令（如 npx -y 或 node 或 python）" autocomplete="off" spellcheck="false">
+                  <input type="text" id="mcp-args" class="settings-input" placeholder="参数（空格分隔，可选）" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="mcp-field-col hidden" id="mcp-url-row">
+                  <input type="text" id="mcp-url" class="settings-input" placeholder="http://localhost:3000/mcp" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="mcp-form-actions">
+                  <button class="prompt-cancel-btn" id="mcp-cancel-btn" type="button">取消</button>
+                  <button class="prompt-save-btn" id="mcp-save-btn" type="button">保存并连接</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="settings-section collapsible" id="sec-data">
             <button class="settings-section-head" type="button" data-sec="sec-data">
               <span class="settings-section-title">🗂 数据</span>
@@ -445,6 +478,7 @@
   <script src="src/renderer/features/settings.js"></script>
   <script src="src/renderer/features/theme.js"></script>
   <script src="src/renderer/features/prompt-lib.js"></script>
+  <script src="src/renderer/features/mcp.js"></script>
   <script src="src/renderer/features/pet.js"></script>
   <script src="src/renderer/features/command.js"></script>
   <script src="src/renderer/features/shortcuts.js"></script>

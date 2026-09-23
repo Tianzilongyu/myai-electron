@@ -33,6 +33,7 @@ function createAgentRunner({
   FALLBACK_TOOL_HINT,
   parseFallbackCommand,
   looksLikeToolsUnsupported,
+  getExtraToolDefs,
 }) {
   async function runAgent(providerId, userMessages, opts = {}, reqId = null, onEvent = null) {
     const msgs = userMessages.slice();
@@ -55,7 +56,9 @@ function createAgentRunner({
     // 研发模式：工具来回轮次大幅放开（普通问答 8 轮够了，自己干活 8 轮不够塞牙缝）
     const agentMode = Boolean(opts.agent);
     const maxRounds = agentMode ? AGENT_MAX_ROUNDS : TOOL_MAX_ROUNDS;
-    const toolDefs = agentMode ? AGENT_TOOL_DEFS : TOOL_DEFS;
+    const baseDefs = agentMode ? AGENT_TOOL_DEFS : TOOL_DEFS;
+    // MCP 工具在每次请求时动态取，新增/重连的服务器下一轮就生效
+    const toolDefs = baseDefs.concat(getExtraToolDefs ? getExtraToolDefs() : []);
     const toolCtx = { autoApprove: Boolean(opts.autoApprove), workDir: opts.workDir || '' };
 
     // 告诉模型「你有这些能力」，否则它即使拿到 tools 也可能不用

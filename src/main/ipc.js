@@ -16,7 +16,7 @@ const BALANCE_TIMEOUT_MS = 8000;
 
 function registerIpc(ctx) {
   const {
-    app, providers, config, aiClient, tools, files, runAgent, isAbortError, getMainWindow,
+    app, providers, config, aiClient, tools, files, mcpClient, runAgent, isAbortError, getMainWindow,
   } = ctx;
 
   /* ---------- 配置 ---------- */
@@ -375,6 +375,21 @@ function registerIpc(ctx) {
     version: app.getVersion(),
     dataDir: app.getPath('userData'),
   }));
+
+  /* ---------- MCP 服务器 ---------- */
+  ipcMain.handle('mcp:list', async () => ({ servers: await mcpClient.status() }));
+
+  ipcMain.handle('mcp:save', async (_e, servers) => {
+    if (!Array.isArray(servers)) return { success: false, error: '格式不对' };
+    config.setPrefs({ mcpServers: servers });
+    await mcpClient.connectAll();
+    return { success: true, servers: await mcpClient.status() };
+  });
+
+  ipcMain.handle('mcp:reload', async () => {
+    await mcpClient.connectAll();
+    return { servers: await mcpClient.status() };
+  });
 }
 
 module.exports = { registerIpc };

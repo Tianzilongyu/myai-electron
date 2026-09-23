@@ -38,6 +38,8 @@ function defaultPrefs() {
     shortcuts: {},             // 自定义快捷键：{ actionId: 'mod+k' }
     /* 自定义提示词库（v2.1）：{ id, title, content } */
     prompts: [],
+    /* MCP 服务器（v2.3）：{ id, name, transport, command, args, cwd, url } */
+    mcpServers: [],
     /* 研发模式：默认关，工作目录默认空，自动批准默认关 —— 三个都得用户自己开 */
     agentMode: false,
     agentWorkDir: '',

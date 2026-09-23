@@ -74,6 +74,12 @@ contextBridge.exposeInMainWorld('api', {
     setSearchKey: (key) => ipcRenderer.invoke('tools:set-search-key', { key }),
   },
 
+  mcp: {
+    list: () => ipcRenderer.invoke('mcp:list'),
+    save: (servers) => ipcRenderer.invoke('mcp:save', servers),
+    reload: () => ipcRenderer.invoke('mcp:reload'),
+  },
+
   app: {
     openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
     info: () => ipcRenderer.invoke('app:info'),

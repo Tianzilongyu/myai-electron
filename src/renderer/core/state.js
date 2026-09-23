@@ -21,6 +21,7 @@
       theme: 'system',           // 主题：system / light / dark
       shortcuts: {},             // 自定义快捷键：{ actionId: 'mod+k' }
       prompts: [],               // 自定义提示词库
+      mcpServers: [],            // MCP 服务器配置
     },
 
     /* 会话 */

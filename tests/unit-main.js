@@ -19,6 +19,9 @@ const {
 const {
   createTools, parseFallbackCommand, isBlockedPath, isBlockedCommand, clipText,
 } = require(path.join(ROOT, 'src/main/tools'));
+const {
+  toolNameFor, parseToolName, isMcpTool, mcpToolToDef, contentToText,
+} = require(path.join(ROOT, 'src/main/mcp'));
 const { createAgentRunner, mergeToolStep } = require(path.join(ROOT, 'src/main/agent'));
 const {
   createFileService, collectDirEntries, mdToHtml, parseTable, collectTable,
@@ -165,6 +168,28 @@ module.exports = function run(t) {
   t.ok('format 拒绝', isBlockedCommand('format C:'));
   t.ok('关机拒绝', isBlockedCommand('shutdown /s'));
   t.eq('普通命令放行', isBlockedCommand('npm run build'), false);
+
+  /* ================= MCP 工具名与定义转换 ================= */
+  t.group('MCP');
+  t.eq('工具名编码', toolNameFor('db', 'query'), 'mcp_db__query');
+  t.eq('工具名净化特殊字符', toolNameFor('a b', 'x-y'), 'mcp_a_b__x_y');
+  t.eq('解析回 serverId', parseToolName('mcp_db__query').serverId, 'db');
+  t.eq('解析回 toolName', parseToolName('mcp_db__query').toolName, 'query');
+  t.eq('非 MCP 工具返回 null', parseToolName('web_search'), null);
+  t.eq('isMcpTool 判定为真', isMcpTool('mcp_db__query'), true);
+  t.eq('isMcpTool 判定为假', isMcpTool('read_file'), false);
+  {
+    const def = mcpToolToDef(
+      { id: 'db', name: '数据库' },
+      { name: 'query', description: '查数据', inputSchema: { type: 'object', properties: { sql: { type: 'string' } } } },
+    );
+    t.eq('工具定义名称', def.function.name, 'mcp_db__query');
+    t.eq('工具描述带服务器名', /数据库/.test(def.function.description), true);
+    t.ok('参数透传', Boolean(def.function.parameters.properties.sql));
+  }
+  t.eq('文本提取', contentToText([{ type: 'text', text: 'a' }, { type: 'text', text: 'b' }]), 'a\nb');
+  t.eq('忽略非文本块', contentToText([{ type: 'image' }, { type: 'text', text: 'c' }]), 'c');
+  t.eq('空数组返回空串', contentToText([]), '');
 
   /* ================= 降级指令解析 ================= */
   t.group('降级指令');

@@ -15,6 +15,7 @@ const { createAiClient, isAbortError, looksLikeToolsUnsupported } = require('./a
 const { createTools, TOOL_DEFS, AGENT_TOOL_DEFS, TOOLS_SYSTEM_HINT, AGENT_SYSTEM_HINT, FALLBACK_TOOL_HINT, parseFallbackCommand } = require('./tools');
 const { createFileService } = require('./files');
 const { createAgentRunner } = require('./agent');
+const { createMcpClient } = require('./mcp');
 const { registerIpc } = require('./ipc');
 const { createMainWindow, createHiddenWindow } = require('./window');
 
@@ -64,7 +65,9 @@ function bootstrap() {
     createHiddenWindow,
   });
 
-  const tools = createTools({ config, readFileContent: files.readFileContent, confirmDangerous });
+  const mcpClient = createMcpClient({ config });
+
+  const tools = createTools({ config, readFileContent: files.readFileContent, confirmDangerous, mcpClient });
 
   const { runAgent } = createAgentRunner({
     providers: PROVIDERS,
@@ -77,6 +80,7 @@ function bootstrap() {
     FALLBACK_TOOL_HINT,
     parseFallbackCommand,
     looksLikeToolsUnsupported,
+    getExtraToolDefs: () => mcpClient.toolDefs(),
   });
 
   registerIpc({
@@ -86,6 +90,7 @@ function bootstrap() {
     aiClient,
     tools,
     files,
+    mcpClient,
     runAgent,
     isAbortError,
     getMainWindow: () => (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null),
@@ -97,6 +102,9 @@ function bootstrap() {
     { backgroundColor: bgForTheme(config.get().prefs) },
   );
   mainWindow.on('closed', () => { mainWindow = null; });
+
+  // 后台连接 MCP 服务器，不阻塞启动；失败在设置里能看到状态
+  mcpClient.connectAll().catch(() => {});
 }
 
 app.whenReady().then(bootstrap);

@@ -247,7 +247,7 @@ function parseFallbackCommand(text) {
 }
 
 /* ---------- 工具执行器 ---------- */
-function createTools({ config, readFileContent, confirmDangerous }) {
+function createTools({ config, readFileContent, confirmDangerous, mcpClient }) {
   const toolLog = [];
 
   function appendToolLog(entry) {
@@ -300,6 +300,15 @@ function createTools({ config, readFileContent, confirmDangerous }) {
     emit('running', '');
 
     try {
+      /* MCP 工具：名字以 mcp_ 开头，交给外部服务器执行。
+       * 总开关同样管住它们；服务器是用户自己加的，视为可信，不再逐个确认。 */
+      if (mcpClient && mcpClient.isMcpTool && mcpClient.isMcpTool(name)) {
+        const result = await mcpClient.callTool(name, args);
+        appendToolLog({ tool: name, args, risk: 'low', result: '已执行', summary: `调用 MCP 工具 ${name}` });
+        emit('done', '完成');
+        return clipText(String(result || ''), TOOL_OUTPUT_LIMIT);
+      }
+
       /* 计划展示：不碰文件系统，纯粹把步骤推给界面，让用户看得见 AI 在干嘛 */
       if (name === 'set_plan') {
         const steps = (Array.isArray(args.steps) ? args.steps : [])

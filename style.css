@@ -1766,3 +1766,43 @@ html[data-theme="dark"] .chat-scroll::-webkit-scrollbar-thumb:hover { background
   .quick-card, .skill-card, .prompt-card { transition: none; }
 }
 
+/* ---------- MCP 服务器设置 ---------- */
+.mcp-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.mcp-list { display: flex; flex-direction: column; gap: 8px; }
+.mcp-empty { font-size: 12px; color: #9ca3af; padding: 10px 2px; line-height: 1.6; }
+.mcp-row {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; background: #fff;
+}
+.mcp-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #9ca3af;
+}
+.mcp-dot.connected { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+.mcp-dot.connecting { background: #4d6bfe; animation: gs-pulse 1.2s ease-in-out infinite; }
+.mcp-dot.error { background: #ef4444; }
+.mcp-info { flex: 1; min-width: 0; }
+.mcp-name { font-size: 13px; font-weight: 600; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcp-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcp-sub.error { color: #dc2626; }
+.mcp-del {
+  flex-shrink: 0; background: none; border: none; color: #9ca3af;
+  font-size: 12px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-family: inherit;
+}
+.mcp-del:hover { color: #dc2626; background: #fee2e2; }
+.mcp-form {
+  margin-top: 10px; padding: 12px; border: 1px dashed #c7d2fe; border-radius: 10px;
+  display: flex; flex-direction: column; gap: 8px; background: #fbfcff;
+}
+.mcp-form.hidden { display: none; }
+.mcp-field-col { display: flex; flex-direction: column; gap: 8px; }
+.mcp-field-col.hidden { display: none; }
+.mcp-form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* 深色：MCP 设置 */
+html[data-theme="dark"] .mcp-row { background: #111827; border-color: #374151; }
+html[data-theme="dark"] .mcp-name { color: #e5e7eb; }
+html[data-theme="dark"] .mcp-sub { color: #6b7280; }
+html[data-theme="dark"] .mcp-sub.error { color: #f87171; }
+html[data-theme="dark"] .mcp-form { background: #1a2231; border-color: #37415a; }
+html[data-theme="dark"] .mcp-del:hover { color: #f87171; background: #251414; }
+

@@ -9,6 +9,7 @@
     renderKeyList();
     App.toolsUI.refresh();
     syncParamControls();
+    if (App.mcp && App.mcp.available()) App.mcp.refresh();
     App.dom.sidebar.classList.add('settings-mode');
     App.dom.sidebarChatView.classList.add('hidden');
     App.dom.sidebarSettingsView.classList.remove('hidden');

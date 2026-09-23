@@ -163,6 +163,12 @@ function createFakeApi(ctl) {
       setSearchKey: async () => ({ success: true }),
     },
 
+    mcp: {
+      list: async () => ({ servers: [] }),
+      save: async (servers) => ({ success: true, servers: servers.map((s) => Object.assign({ status: 'idle', tools: [] }, s)) }),
+      reload: async () => ({ servers: [] }),
+    },
+
     app: {
       openExternal: () => ({ success: true }),
       info: async () => ({ version: '1.1.0', dataDir: 'D:/userData' }),

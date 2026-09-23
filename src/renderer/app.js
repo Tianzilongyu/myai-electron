@@ -236,6 +236,7 @@
     App.command.bind();
     App.shortcuts.bind();
     App.promptLib.bind();
+    App.mcp.bind();
     App.pet.bind();
     App.settings.bindParamControls();
     bindEvents();
