@@ -1,6 +1,6 @@
 {
   "name": "myai-electron",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "我的 AI 桌面客户端",
   "main": "src/main/index.js",
   "scripts": {

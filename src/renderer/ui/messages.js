@@ -39,7 +39,7 @@
 
   function appendMessage(role, text, attachments = [], timestamp = null, meta = null, isStreaming = false, rawContent = null, usage = null, msgRef = null) {
     const msgDiv = doc().createElement('div');
-    msgDiv.className = `message ${role}-message`;
+    msgDiv.className = `message ${role}-message msg-in`;
     if (rawContent) msgDiv.dataset.rawContent = rawContent;
 
     if (role === 'user') {
