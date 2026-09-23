@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src file: data: blob:; connect-src 'none'; form-action 'none'">
+  <title>我的 AI 助手</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <!-- 视图一：会话列表 -->
+      <div class="sidebar-view" id="sidebar-chat-view">
+        <button class="new-chat-btn" id="new-chat-btn">
+          <span class="plus">＋</span> 新建对话
+        </button>
+        <div class="chat-search">
+          <input type="text" id="chat-search-input" class="chat-search-input"
+                 placeholder="搜索会话…" autocomplete="off" spellcheck="false" aria-label="搜索会话">
+          <button class="chat-search-clear hidden" id="chat-search-clear" title="清除搜索">✕</button>
+        </div>
+        <div class="chat-list" id="chat-list"></div>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" id="sidebar-user" title="点击打开设置">
+            <img class="sidebar-user-avatar" id="sidebar-user-avatar" alt="">
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebar-user-name">AI 助手</div>
+              <div class="sidebar-user-status" id="sidebar-user-status">检查中…</div>
+            </div>
+          </div>
+          <button class="sidebar-settings-btn" id="sidebar-settings-btn">⚙️ 设置与密钥</button>
+        </div>
+      </div>
+
+      <!-- 视图二：设置（含密钥管理） -->
+      <div class="sidebar-view hidden" id="sidebar-settings-view">
+        <div class="sv-head">
+          <button class="sv-back" id="sv-back" title="返回对话列表">←</button>
+          <div>
+            <div class="sv-title">设置</div>
+            <div class="sv-sub" id="settings-sub">密钥只保存在本机</div>
+          </div>
+        </div>
+        <div class="sv-body">
+          <div class="settings-section collapsible collapsed" id="sec-keys">
+            <button class="settings-section-head" type="button" data-sec="sec-keys">
+              <span class="settings-section-title">🔑 密钥管理 <span class="sec-count" id="key-count"></span></span>
+              <span class="sec-chevron">▸</span>
+            </button>
+            <div class="settings-section-body">
+              <div class="settings-hint" style="margin-top:-4px">填一次就会加密存到本机，下次打开自动带上，不用重填。点一家展开填写。</div>
+              <div class="key-list" id="key-list"></div>
+            </div>
+          </div>
+
+          <div class="settings-section collapsible" id="sec-tools">
+            <button class="settings-section-head" type="button" data-sec="sec-tools">
+              <span class="settings-section-title">🧰 AI 能力（联网搜索 · 本地访问）</span>
+              <span class="sec-chevron">▾</span>
+            </button>
+            <div class="settings-section-body">
+            <div class="settings-row">
+              <label for="tool-master">允许 AI 使用这些能力</label>
+              <button class="tool-switch" id="tool-master" type="button">关</button>
+            </div>
+            <div class="settings-hint">打开后，AI 可以自己决定何时联网搜索、读写本地文件。
+              <b>写入、删除、执行命令每次都会弹窗让你确认</b>；系统目录和凭据目录任何情况下都不开放。</div>
+
+            <div class="settings-row" style="margin-top:10px">
+              <label for="tool-command">允许执行命令</label>
+              <button class="tool-switch" id="tool-command" type="button">关</button>
+            </div>
+
+            <div class="settings-row stacked" style="margin-top:10px">
+              <label for="tool-search-provider">搜索服务</label>
+              <select id="tool-search-provider" class="settings-input">
+                <option value="ddg">免密钥（DuckDuckGo，开箱即用）</option>
+                <option value="tavily">Tavily（需填 key，质量更好）</option>
+                <option value="serper">Serper / Google（需填 key）</option>
+                <option value="bing">Bing（需填 key）</option>
+              </select>
+            </div>
+            <div class="key-input-row" id="tool-key-row" style="margin-top:6px">
+              <input type="password" id="tool-search-key" class="settings-input key-input"
+                     placeholder="搜索服务的 API Key（选免密钥就不用填）" autocomplete="off" spellcheck="false">
+              <button class="key-btn primary" id="tool-search-key-save" type="button">保存</button>
+            </div>
+            <div class="settings-hint" id="tool-key-state"></div>
+
+            <div class="settings-hint" style="margin-top:10px"><b>最近的工具活动</b></div>
+            <div class="tool-log" id="tool-log"><div class="tool-log-empty">还没有任何工具被调用</div></div>
+            </div>
+          </div>
+
+          <div class="settings-section collapsible" id="sec-params">
+            <button class="settings-section-head" type="button" data-sec="sec-params">
+              <span class="settings-section-title">⚙️ 对话参数</span>
+              <span class="sec-chevron">▾</span>
+            </button>
+            <div class="settings-section-body">
+
+            <div class="settings-row stacked">
+              <label for="temperature">温度（temperature）</label>
+              <div class="param-row">
+                <input type="range" id="temperature" min="0" max="1.5" step="0.1" class="settings-range">
+                <output id="temperature-out" class="param-out">0.7</output>
+              </div>
+            </div>
+            <div class="settings-hint">越低越严谨稳定，越高越发散。日常 0.7，写代码 0.2，想点子 1.0。</div>
+
+            <div class="settings-row stacked" style="margin-top:10px">
+              <label for="max-tokens">最大输出 token</label>
+              <input type="number" id="max-tokens" min="0" max="128000" step="256" class="settings-input">
+            </div>
+            <div class="settings-hint">填 0 表示不限制，由模型自己决定。想要长文就调高。</div>
+
+            <div class="settings-row stacked" style="margin-top:10px">
+              <label for="context-rounds">携带历史轮数</label>
+              <input type="number" id="context-rounds" min="1" max="30" step="1" class="settings-input">
+            </div>
+            <div class="settings-hint">轮数越大越连贯，消耗的 token 也越多。旧内容仍保存在本地，只是不再发给模型。</div>
+
+            <div class="settings-row stacked" style="margin-top:10px">
+              <label for="request-chars">单次请求正文上限（字符）</label>
+              <input type="number" id="request-chars" min="5000" max="300000" step="5000" class="settings-input">
+            </div>
+            <div class="settings-hint">超过就自动丢掉更早的内容，防止请求被撑爆。</div>
+
+            <div class="settings-row stacked" style="margin-top:10px">
+              <label for="system-prompt">自定义系统提示词</label>
+              <textarea id="system-prompt" class="settings-input settings-textarea" rows="4"
+                        placeholder="所有对话都长期生效的额外要求。例如：回答一律用中文；代码必须带注释；不要说客套话"></textarea>
+            </div>
+            <div class="settings-hint">追加在内置提示词之后，与技能提示同时生效。留空表示不加。</div>
+
+            <div class="settings-row" style="margin-top:12px">
+              <label for="auto-title">用 AI 给会话起标题</label>
+              <button class="tool-switch" id="auto-title" type="button">开</button>
+            </div>
+            <div class="settings-hint">关掉也照常能用，会退成本地规则提取：「帮我整理桌面」→「整理桌面」。</div>
+
+            <div class="settings-row" style="margin-top:10px">
+              <label for="auto-save-files">自动保存生成的文件</label>
+              <button class="tool-switch" id="auto-save-files" type="button">开</button>
+            </div>
+            <div class="settings-hint">关掉后 AI 不再产出文件标记，内容直接写在回复里。</div>
+
+            <button class="settings-ghost-btn" id="reset-params-btn" type="button">恢复默认参数</button>
+            </div>
+          </div>
+
+          <div class="settings-section collapsible" id="sec-appearance">
+            <button class="settings-section-head" type="button" data-sec="sec-appearance">
+              <span class="settings-section-title">🎨 外观</span>
+              <span class="sec-chevron">▾</span>
+            </button>
+            <div class="settings-section-body">
+              <div class="settings-row stacked">
+                <label for="theme-select">主题</label>
+                <select id="theme-select" class="settings-input">
+                  <option value="system">跟随系统</option>
+                  <option value="light">浅色</option>
+                  <option value="dark">深色</option>
+                </select>
+              </div>
+              <div class="settings-hint">深色模式默认跟随系统；也可以手动固定为浅色或深色。</div>
+            </div>
+          </div>
+
+          <div class="settings-section collapsible" id="sec-data">
+            <button class="settings-section-head" type="button" data-sec="sec-data">
+              <span class="settings-section-title">🗂 数据</span>
+              <span class="sec-chevron">▾</span>
+            </button>
+            <div class="settings-section-body">
+            <button class="settings-danger-btn" id="clear-sessions-btn">清空全部会话</button>
+            <div class="settings-hint" id="data-dir-hint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="toggle-btn" id="toggle-btn" title="折叠/展开侧边栏">☰</button>
+          <div class="header-title">
+            <span class="status-dot" id="status-dot"></span>
+            AI 助手
+          </div>
+        </div>
+        <!-- 顶栏只保留身份信息，所有操作都收进下方输入框的工具条 -->
+      </header>
+
+      <div class="chat-scroll" id="chat-container">
+        <div class="chat-inner">
+          <div class="welcome-screen" id="welcome-screen">
+            <div class="welcome-text">你好，我能帮什么忙吗？</div>
+            <div class="welcome-sub">可切换单 AI / 多 AI 模式，也可拖入文件</div>
+            <div class="welcome-hintbar">
+              <span>按</span><kbd>Ctrl</kbd><span>/</span><kbd>⌘</kbd><span>+</span><kbd>K</kbd>
+              <span>打开命令面板，按</span><kbd>?</kbd><span>看快捷键</span>
+            </div>
+            <div class="setup-hint hidden" id="setup-hint">
+              <div class="setup-hint-text">还没有配置任何 AI 密钥，先去设置里填一个吧</div>
+              <button class="setup-hint-btn" id="setup-hint-btn">打开设置</button>
+            </div>
+            <button class="resume-last hidden" id="resume-last-btn" type="button">继续上次对话</button>
+            <div class="quick-cards" id="quick-cards">
+              <div class="quick-card" data-prompt="帮我写一份本周项目周报，包含完成事项、进行中、下周计划">📝 写周报</div>
+              <div class="quick-card" data-prompt="帮我做一个 5 人的员工考勤表，包含姓名、日期、上下班时间">📊 做表格</div>
+              <div class="quick-card" data-prompt="把下面这段中文翻译成地道的英文：">🌏 翻译</div>
+              <div class="quick-card" data-prompt="帮我用 Python 写一个批量重命名文件的脚本">💻 写代码</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drop-overlay" id="drop-overlay">
+        <div class="drop-overlay-inner">
+          <div class="drop-icon">📄</div>
+          <div class="drop-text">松开鼠标，把文件交给 AI</div>
+        </div>
+      </div>
+
+      <footer class="input-area">
+        <!-- 单 AI / 多 AI 的选择搬到这里，跟输入框在一起，手不用往上够 -->
+        <div class="input-toolbar">
+          <div class="mode-switch" id="mode-switch">
+            <button class="mode-btn active" type="button" data-mode="single">单 AI</button>
+            <button class="mode-btn" type="button" data-mode="multi">多 AI</button>
+          </div>
+
+          <!-- 带形象的下拉选择器：原生 select 隐藏，仅用于承载取值逻辑 -->
+          <div class="ai-picker" id="ai-picker">
+            <button class="ai-picker-btn" id="ai-picker-btn" title="选择 AI">
+              <span class="ai-picker-avatar" id="ai-picker-avatar"></span>
+              <span class="ai-picker-name" id="ai-picker-name">选择 AI</span>
+              <span class="ai-picker-arrow">▾</span>
+            </button>
+            <div class="ai-picker-menu hidden" id="ai-picker-menu"></div>
+          </div>
+          <select id="single-ai-select" class="ai-select sr-only"></select>
+
+          <!-- 多 AI 模式下取代上面的选择器：一眼看到现在是谁带谁干 -->
+          <button class="team-btn hidden" id="multi-config-btn" type="button" title="打开多 AI 团队配置">
+            <span class="team-badge" id="team-badge-leader">统领</span>
+            <span class="team-leader" id="team-leader-name">未选择</span>
+            <span class="team-sep">·</span>
+            <span class="team-workers" id="team-worker-summary">0 位专家</span>
+            <span class="ai-picker-arrow">▾</span>
+          </button>
+        </div>
+
+        <!-- 第二排：导入 / 技能 / 深度思考 / token / 设置 -->
+        <div class="input-toolbar input-toolbar-tools">
+          <button class="action-btn" id="open-file-btn" title="导入本地文件">导入</button>
+          <button class="agent-toggle" id="agent-toggle" title="研发模式：让 AI 自己勘察、计划、写代码、跑验证，把任务做完">
+            <span class="agent-label">研发模式</span>
+          </button>
+          <button class="skill-btn" id="skill-btn" title="选择 AI 技能">
+            技能 <span class="skill-count" id="skill-count">0</span>
+          </button>
+          <button class="action-btn" id="prompt-btn" title="提示词库：保存常用提示词，一键填入">提示词</button>
+          <button class="think-toggle" id="think-toggle" title="开启/关闭深度思考">
+            <span class="think-label">深度思考</span>
+          </button>
+          <button class="token-chip" id="token-chip" title="本会话累计 token 用量，点击查看明细">
+            <span class="token-label">用量</span>
+            <span id="token-chip-text">0</span>
+          </button>
+          <span class="toolbar-spacer"></span>
+          <button class="action-btn" id="settings-btn" title="设置">设置</button>
+        </div>
+        <!-- 研发模式的工作台：指定项目目录 + 是否自动批准（只在目录内生效） -->
+        <div class="agent-bar hidden" id="agent-bar">
+          <span class="agent-bar-icon">📁</span>
+          <span class="agent-bar-label">工作目录</span>
+          <span class="agent-bar-dir" id="agent-dir" title="未选择">未选择</span>
+          <button class="agent-bar-btn" id="agent-dir-pick">选择…</button>
+          <button class="agent-bar-btn" id="agent-dir-clear" title="清除工作目录">✕</button>
+          <span class="agent-bar-gap"></span>
+          <button class="agent-bar-switch" id="agent-auto-approve" title="开启后，工作目录内的写文件/删文件/跑命令不再逐个弹窗；目录外依然会问">自动批准</button>
+          <span class="agent-bar-tip">AI 会自己勘察目录 → 列计划 → 改代码 → 跑验证</span>
+        </div>
+        <div class="attachment-bar" id="attachment-bar"></div>
+        <div class="gen-status hidden" id="gen-status" role="status" aria-live="polite"></div>
+        <div class="input-inner">
+          <textarea id="user-input" placeholder="给 AI 发送消息…（Enter 发送，Shift+Enter 换行，可拖拽文件）" rows="1"></textarea>
+          <button id="send-btn">发送</button>
+        </div>
+      </footer>
+
+      <!-- 右下角桌面宠物浮窗：可拖动，点头像弹出信息气泡 -->
+      <div class="deskmate" id="deskmate">
+        <div class="deskmate-bubble hidden" id="deskmate-bubble" aria-hidden="true"></div>
+        <button class="deskmate-pet" id="deskmate-pet" title="点我看账本，按住可以拖走（双击回原位）">
+          <img id="deskmate-img" src="assets/avatars/deepseek.png" alt="AI 形象">
+          <span class="deskmate-shadow" aria-hidden="true"></span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- 多AI配置面板 -->
+  <div class="config-mask" id="config-mask"></div>
+  <div class="config-panel" id="config-panel">
+    <div class="config-header">
+      <div class="config-title">多 AI 协作配置</div>
+      <button class="config-close" id="config-close" type="button" title="关闭">✕</button>
+    </div>
+    <div class="config-body">
+      <!-- 分区可折叠：15 家全摊开太长了，点标题收起/展开 -->
+      <div class="config-section" data-sec="leader">
+        <button class="config-section-head" type="button" aria-expanded="true">
+          <span class="config-section-arrow">▾</span>
+          <span class="config-section-title">统领 AI（负责规划 + 汇总）</span>
+          <span class="config-section-count" id="leader-count">1</span>
+        </button>
+        <div class="config-section-body">
+          <div class="config-radio-group" id="leader-group"></div>
+        </div>
+      </div>
+      <div class="config-section" data-sec="worker">
+        <button class="config-section-head" type="button" aria-expanded="true">
+          <span class="config-section-arrow">▾</span>
+          <span class="config-section-title">被统领 AI（专家团队，可多选）</span>
+          <span class="config-section-count" id="worker-count">0</span>
+        </button>
+        <div class="config-section-body">
+          <div class="config-worker-tools">
+            <button class="config-mini-btn" id="worker-select-all" type="button">全选已配置的</button>
+            <button class="config-mini-btn" id="worker-clear" type="button">清空</button>
+          </div>
+          <div class="config-checkbox-group" id="worker-group"></div>
+        </div>
+      </div>
+      <div class="config-hint">建议：统领用质量最高的，被统领用便宜或免费的模型。至少选一个被统领 AI。</div>
+    </div>
+    <div class="config-footer">
+      <button class="config-btn-secondary" id="config-cancel">取消</button>
+      <button class="config-btn-primary" id="config-save">保存</button>
+    </div>
+  </div>
+
+  <!-- 技能面板 -->
+  <div class="skill-panel-mask" id="skill-panel-mask"></div>
+  <aside class="skill-panel" id="skill-panel">
+    <div class="skill-panel-header">
+      <div>
+        <div class="skill-panel-title">技能卡槽</div>
+        <div class="skill-panel-sub">选择一个或多个技能，AI 会切换到对应的角色</div>
+      </div>
+      <button class="skill-panel-close" id="skill-panel-close">✕</button>
+    </div>
+    <div class="skill-grid" id="skill-grid"></div>
+    <div class="skill-panel-footer">
+      <button class="skill-clear-btn" id="skill-clear-btn">清除全部</button>
+      <button class="skill-apply-btn" id="skill-apply-btn">应用</button>
+    </div>
+  </aside>
+
+  <!-- 提示词库面板 -->
+  <div class="prompt-panel-mask" id="prompt-panel-mask"></div>
+  <aside class="prompt-panel" id="prompt-panel">
+    <div class="prompt-panel-header">
+      <div>
+        <div class="prompt-panel-title">提示词库</div>
+        <div class="prompt-panel-sub">保存常用提示词，一键填入输入框</div>
+      </div>
+      <div class="prompt-panel-head-actions">
+        <button class="prompt-new-btn" id="prompt-new-btn" type="button">新建</button>
+        <button class="prompt-panel-close" id="prompt-panel-close" type="button">✕</button>
+      </div>
+    </div>
+    <div class="prompt-form hidden" id="prompt-form">
+      <input type="text" id="prompt-title-input" class="settings-input" placeholder="标题（如：周报模板）" maxlength="40" autocomplete="off">
+      <textarea id="prompt-content-input" class="settings-input settings-textarea" rows="4" placeholder="提示词内容…（Ctrl / ⌘ + Enter 保存）"></textarea>
+      <div class="prompt-form-actions">
+        <button class="prompt-cancel-btn" id="prompt-cancel-btn" type="button">取消</button>
+        <button class="prompt-save-btn" id="prompt-save-btn" type="button">保存</button>
+      </div>
+    </div>
+    <div class="prompt-list" id="prompt-list"></div>
+  </aside>
+
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <!-- 命令面板：Ctrl / Cmd + K -->
+  <div class="cmd-mask" id="cmd-mask"></div>
+  <div class="cmd-panel" id="cmd-panel" role="dialog" aria-modal="true" aria-label="命令面板">
+    <div class="cmd-input-row">
+      <span class="cmd-prompt" aria-hidden="true">›</span>
+      <input type="text" id="cmd-input" class="cmd-input" placeholder="搜索会话、切换 AI，或输入命令…"
+             autocomplete="off" spellcheck="false" aria-label="命令面板输入框">
+    </div>
+    <div class="cmd-list" id="cmd-list" role="listbox" aria-label="命令列表"></div>
+    <div class="cmd-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+      <span><kbd>Enter</kbd> 执行</span>
+      <span><kbd>Esc</kbd> 关闭</span>
+    </div>
+  </div>
+
+  <!-- 快捷键速查 -->
+  <div class="shortcuts-mask" id="shortcuts-mask"></div>
+  <div class="shortcuts-panel" id="shortcuts-panel" role="dialog" aria-modal="true" aria-label="键盘快捷键">
+    <div class="shortcuts-head">
+      <div class="shortcuts-title">键盘快捷键</div>
+      <button class="config-close" id="shortcuts-close" type="button">✕</button>
+    </div>
+    <div class="shortcuts-body" id="shortcuts-body"></div>
+  </div>
+
+  <!-- 渲染层：按依赖顺序加载，每个文件只往 window.App 上挂自己的那部分。
+       不用 ES module 是因为 file:// 下会被 CORS 拦掉，走普通脚本最稳。 -->
+  <script src="src/renderer/core/dom.js"></script>
+  <script src="src/renderer/core/state.js"></script>
+  <script src="src/renderer/core/utils.js"></script>
+  <script src="src/renderer/core/bridge.js"></script>
+  <script src="src/renderer/core/markdown.js"></script>
+  <script src="src/renderer/core/tokens.js"></script>
+  <script src="src/renderer/core/save-markers.js"></script>
+  <script src="src/renderer/core/steps.js"></script>
+
+  <script src="src/renderer/data/constants.js"></script>
+  <script src="src/renderer/data/skills.js"></script>
+  <script src="src/renderer/data/prompts.js"></script>
+  <script src="src/renderer/data/sessions.js"></script>
+
+  <script src="src/renderer/ui/avatars.js"></script>
+  <script src="src/renderer/ui/gen-status.js"></script>
+  <script src="src/renderer/ui/blocks.js"></script>
+  <script src="src/renderer/ui/messages.js"></script>
+
+  <script src="src/renderer/features/ai.js"></script>
+  <script src="src/renderer/features/attachments.js"></script>
+  <script src="src/renderer/features/provider-ui.js"></script>
+  <script src="src/renderer/features/panels.js"></script>
+  <script src="src/renderer/features/agent.js"></script>
+  <script src="src/renderer/features/tools-ui.js"></script>
+  <script src="src/renderer/features/settings.js"></script>
+  <script src="src/renderer/features/theme.js"></script>
+  <script src="src/renderer/features/prompt-lib.js"></script>
+  <script src="src/renderer/features/pet.js"></script>
+  <script src="src/renderer/features/command.js"></script>
+  <script src="src/renderer/features/shortcuts.js"></script>
+  <script src="src/renderer/features/chat.js"></script>
+
+  <script src="src/renderer/app.js"></script>
+  <script src="src/renderer/boot.js"></script>
+</body>
+</html>

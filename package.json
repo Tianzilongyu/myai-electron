@@ -1,0 +1,55 @@
+{
+  "name": "myai-electron",
+  "version": "2.1.0",
+  "description": "我的 AI 桌面客户端",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/run.js",
+    "dist": "electron-builder",
+    "dist:dir": "electron-builder --dir"
+  },
+  "author": "你",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^44.4.1",
+    "electron-builder": "^26.15.3",
+    "jsdom": "^30.1.0"
+  },
+  "dependencies": {
+    "docx": "^9.7.1",
+    "mammoth": "^1.12.3",
+    "pdf-parse": "^2.4.5",
+    "pptxgenjs": "^4.0.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "build": {
+    "appId": "com.local.myai.assistant",
+    "productName": "我的AI助手",
+    "files": [
+      "src/**/*",
+      "preload.js",
+      "index.html",
+      "style.css",
+      "assets/**/*",
+      "package.json",
+      "!node_modules/.cache"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

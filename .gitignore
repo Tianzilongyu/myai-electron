@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# 本地备份（含旧版明文密钥，确认清理后可删除整个目录）
+.backup/
+
+# AI 工具工作区（记忆/状态，非项目代码）
+.workbuddy/
+
+# 测试生成的报告
+tests/.report.txt
